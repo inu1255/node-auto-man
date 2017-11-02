@@ -100,6 +100,13 @@ function worker() {
     });
 }
 
+function loop() {
+    worker();
+    setTimeout(loop, 300000);
+}
+
+loop();
+
 if (require.main == module) {
     co(function*() {
         try {
