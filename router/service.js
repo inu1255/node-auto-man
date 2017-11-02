@@ -20,7 +20,7 @@ function getService(sid) {
     });
 }
 
-function parseParam(s, params, param, ) {
+function parseParam(s, params, param) {
     for (let k in params) {
         let v = param[k];
         s = s.replace(k, v);
