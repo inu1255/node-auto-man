@@ -1,13 +1,7 @@
-'use strict';
 /**
  * Created Date: 2017-09-25 17:30:38
  * Author: inu1255
  * E-Mail: 929909260@qq.com
- * -----
- * Last Modified: 2017-10-09 11:53:35
- * Modified By: inu1255
- * -----
- * Copyright (c) 2017 gaomuxuexi
  */
 const express = require("express");
 const bodyParser = require('body-parser');
@@ -52,6 +46,6 @@ app.get('*', function(req, res) {
     res.json({ no: 404, msg: "页面不存在" });
 });
 
-app.listen(3000, function() {
-    console.log('Listening on http://localhost:3000');
+app.listen(config.port, function() {
+    console.log('Listening on http://localhost:' + config.port);
 });

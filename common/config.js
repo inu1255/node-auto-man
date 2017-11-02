@@ -4,9 +4,14 @@
  * E-Mail: 929909260@qq.com
  */
 const appname = "automan";
-
+let port = 3000;
+let i = process.argv.indexOf("--port");
+if (i >= 0) {
+    port = process.argv[i + 1] || port;
+}
 module.exports = {
     appname,
+    port,
     mysql: {
         host: '127.0.0.1',
         user: 'root',
