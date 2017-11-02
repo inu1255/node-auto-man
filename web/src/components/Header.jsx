@@ -36,6 +36,9 @@ class Header extends React.Component {
                   <Link to="/create">
                   <Icon type="create" />创建服务</Link>
                 </Menu.Item>
+                <Menu.Item className="right" key="/help">
+                  <a target="_blank" href="https://gitee.com/inu1255/easy-sign"><Icon type="help" />反馈</a>
+                </Menu.Item>
                 { this.renderLogin() }
               </Menu>
             </div>
