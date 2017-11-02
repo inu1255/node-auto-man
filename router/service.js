@@ -172,8 +172,9 @@ exports.params = function(req, res) {
             return body;
         } catch (error) {
             if (error.code === "ER_DUP_ENTRY") {
-                let { sid, ...rest } = body;
-                yield knex("params").where({ sid, uid: user.id }).update(rest);
+                let sid = body.sid;
+                delete body.sid;
+                yield knex("params").where({ sid, uid: user.id }).update(body);
                 return;
             }
             throw error;
