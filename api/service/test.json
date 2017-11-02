@@ -1,0 +1,53 @@
+{
+    "name": "测试服务",
+    "method": "POST",
+    "params": {
+        "url": {
+            "rem": "服务url",
+            "need": true,
+            "reg": "^https?:\\/\\/"
+        },
+        "method": {
+            "rem": "请求method",
+            "def": "POST",
+            "enum": ["POST", "GET", "DELETE"]
+        },
+        "body": {
+            "rem": "post数据"
+        },
+        "headers": {
+            "rem": "http头",
+            "type": "str"
+        },
+        "params": {
+            "rem": "需要参数",
+            "type": "json"
+        },
+        "checks": {
+            "rem": "校验方法",
+            "need": true,
+            "type": "json"
+        },
+        "values": {
+            "rem": "填写参数",
+            "type": "json"
+        }
+    },
+    "grant": {
+        "$U": "需要登录"
+    },
+    "error": {
+        "405": "服务已经存在"
+    },
+    "ret": {
+        "no": 200,
+        "msg": "",
+        "data": {
+            "id|+1": 1,
+            "name": "@cfirst服务",
+            "desc": "@cparagraph",
+            "url": "@url",
+            "method": "POST"
+        }
+    }
+}

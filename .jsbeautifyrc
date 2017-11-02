@@ -1,0 +1,42 @@
+{
+    // "indent_with_tabs": true,
+    "brace_style": "collapse,preserve-inline", // expand
+    "semi": true,
+    "e4x": true,
+    "preset": "jquery",
+    "whiteSpace": {
+        "before": {
+            "ArgumentList": 0,
+            "ArrayExpressionClosing": 0,
+            "CatchParameterList": 0,
+            "ExpressionClosingParentheses": 0,
+            "ForInStatementExpressionClosing": 1,
+            "ForOfStatementExpressionClosing": 1,
+            "ForStatementExpressionClosing": 1,
+            "IfStatementConditionalClosing": 0,
+            "IIFEClosingParentheses": 0,
+            "MemberExpressionClosing": 0,
+            "ObjectExpressionClosingBrace": 0,
+            "ParameterList": 0,
+            "SwitchDiscriminantClosing": 0,
+            "WhileStatementConditionalClosing": 1
+        },
+        "after": {
+            "ArgumentList": 0,
+            "ArrayExpressionOpening": 0,
+            "CatchParameterList": 0,
+            "ExpressionOpeningParentheses": 0,
+            "ForInStatementExpressionOpening": 1,
+            "ForOfStatementExpressionOpening": 1,
+            "ForStatementExpressionOpening": 1,
+            "IfStatementConditionalOpening": 0,
+            "IIFEOpeningParentheses": 0,
+            "MemberExpressionOpening": 0,
+            "ObjectExpressionOpeningBrace": 0,
+            "ParameterList": 0,
+            "PropertyValue": 0,
+            "SwitchDiscriminantOpening": 0,
+            "WhileStatementConditionalOpening": 1
+        }
+    }
+}

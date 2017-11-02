@@ -1,0 +1,31 @@
+{
+    "name": "主动签到",
+    "method": "GET",
+    "params": {
+        "sid": {
+            "rem": "服务id",
+            "need": true
+        }
+    },
+    "grant": {
+        "$U": "需要登录"
+    },
+    "error": {
+        "404": "您还没有使用此服务",
+        "405": "今天的签到次数用完了"
+    },
+    "ret": {
+        "no": 200,
+        "msg": "",
+        "data": {
+            "sid": 2,
+            "uid": 1,
+            "params": "{\"$TOKEN\":\"011A1D4EA3AFAACA23BECFA6DDF27FAC\"}",
+            "body": "{\"result\":{\"obj\":null,\"code\":1,\"info\":\"\"}}",
+            "code": 0,
+            "msg": "已经签到",
+            "id": 12,
+            "create_at": "2017-10-31T04:17:16.127Z"
+        }
+    }
+}

@@ -1,0 +1,44 @@
+{
+    "name": "服务记录",
+    "method": "POST",
+    "params": {
+        "sid": {
+            "rem": "服务id",
+            "need": true
+        },
+        "page": {
+            "rem": "第几页",
+            "type": "int",
+            "def": 0
+        },
+        "size": {
+            "rem": "每页多少",
+            "type": "int",
+            "def": 30
+        }
+    },
+    "grant": {
+        "$U": "需要登录"
+    },
+    "error": {
+    },
+    "ret": {
+        "no": 200,
+        "msg": "",
+        "data": [
+            {
+                "id": 2,
+                "title": "移动掌上营业厅签到",
+                "desc": "",
+                "params": "{\"$TOKEN\":\"SSOCookie\"}",
+                "create_at": "2017-10-31T03:56:30.000Z",
+                "sid": 2,
+                "uid": 1,
+                "values": "{\"$TOKEN\":\"011A1D4EA3AFAACA23BECFA6DDF27FAC\"}",
+                "active": 1,
+                "lastrun_at": 17470,
+                "rid": 12
+            }
+        ]
+    }
+}

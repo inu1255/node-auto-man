@@ -1,0 +1,57 @@
+{
+    "name": "创建服务",
+    "method": "POST",
+    "params": {
+        "title": {
+            "rem": "服务名",
+            "need": true,
+            "len": [1, 32]
+        },
+        "url": {
+            "rem": "服务url",
+            "need": true,
+            "reg": "^https?:\\/\\/"
+        },
+        "desc": {
+            "rem": "服务描述"
+        },
+        "method": {
+            "rem": "请求method",
+            "def": "POST",
+            "enum": ["POST", "GET", "DELETE"]
+        },
+        "body": {
+            "rem": "post数据"
+        },
+        "headers": {
+            "rem": "http头",
+            "type": "str"
+        },
+        "params": {
+            "rem": "需要参数",
+            "type": "str"
+        },
+        "checks": {
+            "rem": "校验方法",
+            "need": true,
+            "type": "str"
+        }
+    },
+    "grant": {
+        "$U": "需要登录"
+    },
+    "error": {
+        "405": "服务已经存在"
+    },
+    "ret": {
+        "no": 200,
+        "msg": "",
+        "data": {
+            "id|+1": 1,
+            "name": "@cfirst服务",
+            "desc": "@cparagraph",
+            "url": "@url",
+            "method": "POST"
+        }
+    }
+}

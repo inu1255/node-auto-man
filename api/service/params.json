@@ -1,0 +1,37 @@
+{
+    "name": "使用服务",
+    "method": "POST",
+    "params": {
+        "sid": {
+            "rem": "服务id",
+            "need": true
+        },
+        "values": {
+            "rem": "服务参数设置",
+            "type": "str"
+        },
+        "active": {
+            "rem": "是否启用",
+            "def": 1
+        }
+    },
+    "grant": {
+        "$U": "需要登录"
+    },
+    "check": {
+        "$B.params!=null||$B.active!=null": "params或active至少需要传一个"
+    },
+    "error": {
+        "405": "服务已经存在"
+    },
+    "ret": {
+        "no": 200,
+        "msg": "",
+        "data": {
+            "id|+1": 1,
+            "tid": 1,
+            "params": "",
+            "active": "1"
+        }
+    }
+}
