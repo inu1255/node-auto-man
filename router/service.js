@@ -16,7 +16,6 @@ function getService(sid) {
         if (!serv) return serv;
         serv.params = JSON.parse(serv.params);
         serv.checks = JSON.parse(serv.checks);
-        serv.headers = JSON.parse(serv.headers);
         return serv;
     });
 }

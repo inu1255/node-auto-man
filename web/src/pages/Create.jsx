@@ -44,10 +44,10 @@ class Create extends React.Component {
         if (match.params.id) {
             edit.id = match.params.id
             await request("/service/update", edit)
-            message.success("添加成功")
+            message.success("修改成功")
         } else {
             await request("/service/create", edit)
-            message.success("修改成功")
+            message.success("添加成功")
         }
     }
     test = async () => {
