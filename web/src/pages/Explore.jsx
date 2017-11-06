@@ -24,11 +24,15 @@ class Explore extends React.Component {
             let li = []
             li.push(record.uid ? <span key={ i++ }>已添加</span> : <Button key={ i++ } onClick={ () => this.setState({edit: record}) } type="primary">添加</Button>)
             const {user} = this.props
-            if (user && user.self && user.self.id === record.create_by)
-                li.push(<Button key={ i++ } onClick={ () => this.setState({edit: record}) } type="primary">修改</Button>)
+            if (user && user.self && (user.self.id === 2 || user.self.id === record.create_by))
+                li.push(<Button key={ i++ } onClick={ this.changeServ.bind(this,record) } type="primary">修改</Button>)
             return li
         }
     },]
+    changeServ(record) {
+        const {history} = this.props
+        history.push("/create/" + record.id)
+    }
     query = (where) => {
         return request("/service/list", where)
     }

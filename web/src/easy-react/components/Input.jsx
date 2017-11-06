@@ -104,7 +104,7 @@ class Input extends React.Component {
             kv = this.kv || kv
         } else {
             for ( let item of ( this.kv || []) ) {
-                if (value[item.k]) {
+                if (value && value[item.k]) {
                     kv.push(item)
                 }
             }

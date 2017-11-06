@@ -16,6 +16,7 @@ function getService(sid) {
         if (!serv) return serv;
         serv.params = JSON.parse(serv.params);
         serv.checks = JSON.parse(serv.checks);
+        serv.headers = JSON.parse(serv.headers);
         return serv;
     });
 }
@@ -169,6 +170,39 @@ exports.create = function(req, res) {
     });
 };
 
+exports.update = function(req, res) {
+    return co(function*() {
+        const body = req.body;
+        const user = req.session.user;
+        const serv = yield knex("service").where("id", body.id).first();
+        if (!serv) {
+            return 404;
+        }
+        if (serv.create_by != user.id && user.id != 2) {
+            return 405;
+        }
+        yield knex("service").where("id", body.id).update(body);
+    });
+};
+
+exports.info = function(req, res) {
+    return co(function*() {
+        const body = req.body;
+        const user = req.session.user;
+        const serv = yield knex("service").where("id", body.id).first();
+        if (!serv) {
+            return 404;
+        }
+        if (serv.create_by != user.id && user.id != 2) {
+            return 405;
+        }
+        serv.params = JSON.parse(serv.params);
+        serv.headers = JSON.parse(serv.headers);
+        serv.checks = JSON.parse(serv.checks);
+        return serv;
+    });
+};
+
 exports.params = function(req, res) {
     return co(function*() {
         const body = req.body;
@@ -213,7 +247,7 @@ exports.list = function(req, res) {
         const body = req.body;
         const user = req.session.user;
         const { keyword, page, size } = body;
-        let sql = knex("service").select(["id", "title", "desc", "params", "create_at"]);
+        let sql = knex("service").select(["id", "title", "desc", "params", "create_at", "create_by"]);
         if (keyword) sql.where("service.title", "like", `%${keyword}%`).orWhere("service.desc", "like", `%${keyword}%`);
         if (user) sql.select("params.*").leftJoin(knex("params").where("params.uid", user.id).as("params"), "service.id", "params.sid");
         let rows = yield sql.offset(page * size).limit(size);

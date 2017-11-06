@@ -11,24 +11,44 @@ const {Content} = Layout;
 class Create extends React.Component {
     constructor(props) {
         super(props)
-        this.state = {
-            edit: {
-                "title": "poro签到得流量",
-                "desc": "**需要Cookie**\n\n使用步骤\n\n1. 访问[此链接](http://www.poro.top/user)并登录\n2. 拿到Cookie\n3. 填入下面输入框中",
-                "url": "http://www.poro.top/user/checkin",
-                "body": "",
-                "method": "POST",
-                "headers": {"Cookie": "$COOKIE"},
-                "params": {"$COOKIE": "登录后得到的Cookie"},
-                "checks": {"ret[^\\d]+1[^\\d]": "签到成功"}
+        this.state = {edit: {}}
+    }
+    componentDidMount() {
+        this.info()
+    }
+    info = async (props) => {
+        const {match} = props || this.props
+        if (match.params.id) {
+            let edit = await request("/service/info?id=" + match.params.id)
+            this.state.edit = edit
+        } else {
+            this.state = {
+                edit: {
+                    "title": "poro签到得流量",
+                    "desc": "**需要Cookie**\n\n使用步骤\n\n1. 访问[此链接](http://www.poro.top/user)并登录\n2. 拿到Cookie\n3. 填入下面输入框中",
+                    "url": "http://www.poro.top/user/checkin",
+                    "body": "",
+                    "method": "POST",
+                    "headers": {"Cookie": "$COOKIE"},
+                    "params": {"$COOKIE": "登录后得到的Cookie"},
+                    "checks": {"ret[^\\d]+1[^\\d]": "签到成功"}
+                }
             }
         }
         this.setValues()
+        this.setState({})
     }
     submit = async () => {
         const {edit} = this.state
-        let data = await request("/service/create", edit)
-        message.success("添加成功")
+        const {match} = this.props
+        if (match.params.id) {
+            edit.id = match.params.id
+            await request("/service/update", edit)
+            message.success("添加成功")
+        } else {
+            await request("/service/create", edit)
+            message.success("修改成功")
+        }
     }
     test = async () => {
         const {edit} = this.state
@@ -53,11 +73,12 @@ class Create extends React.Component {
     }
     render() {
         const {edit, testout} = this.state
+        const {match} = this.props
         return (
             <Layout className="Create">
               <Layout className="content">
                 <Content>
-                  <Input onChange={ this.update } title="标题" data={ edit } k="title"></Input>
+                  <Input disabled={ match.params.id } onChange={ this.update } title="标题" data={ edit } k="title"></Input>
                   <Input onChange={ this.update } title="介绍" data={ edit } k="desc" type="textarea"></Input>
                   <Input onChange={ this.update } title="URL" data={ edit } k="url"></Input>
                   <Input onChange={ this.update } title="METHOD" data={ edit } k="method" type="select" dataSource={ ["POST", "GET"] }></Input>

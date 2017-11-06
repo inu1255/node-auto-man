@@ -38,7 +38,8 @@ const App = () => {
           <Route path="/user" component={ User } />
           <Route auth path="/dashboard" component={ DashBoard } />
           <Route auth path="/explore" component={ Explore } />
-          <Route auth path="/create" component={ Create } />
+          <Route auth exact path="/create" component={ Create } />
+          <Route auth exact path="/create/:id" component={ Create } />
           <Route component={ NotFound } />
         </Switch>
       </div>

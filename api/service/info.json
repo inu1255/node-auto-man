@@ -1,0 +1,29 @@
+{
+    "name": "创建服务",
+    "method": "GET",
+    "params": {
+        "id": {
+            "rem": "服务id",
+            "need": true,
+            "type": "int"
+        }
+    },
+    "grant": {
+        "$U": "需要登录"
+    },
+    "error": {
+        "404": "服务不存在",
+        "405": "没有修改权限"
+    },
+    "ret": {
+        "no": 200,
+        "msg": "",
+        "data": {
+            "id|+1": 1,
+            "name": "@cfirst服务",
+            "desc": "@cparagraph",
+            "url": "@url",
+            "method": "POST"
+        }
+    }
+}

@@ -97,9 +97,9 @@ function paramCheck(k, param) {
                 if (typ && value != null) {
                     switch (typ) {
                         case "int":
-                            if (typeof value != "number")
+                            if (!/^\d/.test(value))
                                 return `${name}必须是整数`;
-                            body[k] = Math.floor(value);
+                            body[k] = parseInt(value);
                             break;
                         case "array":
                             if (value instanceof Array)
