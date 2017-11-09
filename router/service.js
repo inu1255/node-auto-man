@@ -128,7 +128,7 @@ exports.test = function(req, res) {
                 return { code: 400, msg: `缺少参数${k}(${serv.params[k]})` };
             }
         }
-        opt.body = parseParam(serv.body, serv.params, param.values);
+        opt.body = parseParam(serv.body||"", serv.params, param.values);
         opt.headers = parseParam(serv.headers, serv.params, param.values);
         opt.headers = JSON.parse(opt.headers);
         opt.method = serv.method;
