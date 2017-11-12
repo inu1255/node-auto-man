@@ -43,7 +43,7 @@ app.get("/upgrade", function(req, res) {
 });
 
 app.get('*', function(req, res) {
-    res.redirect("/");
+    res.sendfile("./public/index.html");
 });
 
 app.listen(config.port, function() {
