@@ -11,6 +11,7 @@ if (i >= 0) {
 }
 module.exports = {
     appname,
+    apiDir: "api",
     port,
     mysql: {
         host: '127.0.0.1',

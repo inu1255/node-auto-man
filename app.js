@@ -43,7 +43,7 @@ app.get("/upgrade", function(req, res) {
 });
 
 app.get('*', function(req, res) {
-    res.json({ no: 404, msg: "页面不存在" });
+    res.redirect("/");
 });
 
 app.listen(config.port, function() {

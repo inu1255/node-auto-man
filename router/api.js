@@ -1,34 +1,20 @@
+"use strict";
 /**
  * Created Date: 2017-09-28 10:44:28
  * Author: inu1255
  * E-Mail: 929909260@qq.com
  */
-const Mock = require("mockjs");
 const express = require("express");
 const router = express.Router();
 const fs = require("fs");
+const co = require("co");
 const path = require("path");
 const utils = require("../common/utils");
 const logger = require("../common/log").logger;
 const config = require("../common/config");
+const Mock = require("../common/mock");
 
-const constellations = ['白羊座', '金牛座', '双子座', '巨蟹座', '狮子座', '处女座', '天秤座', '天蝎座', '射手座', '摩羯座', '水瓶座', '双鱼座'];
-
-Mock.Random.extend({
-    constellation: function() {
-        return this.pick(constellations);
-    }
-});
-
-Mock.Random.extend({
-    regex: function() {
-        const data = [].join.call(arguments, ",");
-        if (data == null) return "";
-        return Mock.mock(new RegExp(data));
-    }
-});
-
-const apiDir = path.join(__dirname, "../api");
+const apiDir = config.apiDir;
 
 function walkFiles(dir, fn) {
     const files = fs.readdirSync(dir);
@@ -60,21 +46,29 @@ function paramClean(keys) {
 /**
  * 生成参数验证函数
  * @param {string} k 参数key
- * @param {string} rem 参数名
+ * @param {string} lbl 参数名
+ * @param {string} rem 参数注释
  * @param {bool} need 是否必填
  * @param {any} def 默认值
  * @param {Array} len 长度限制 [6,32] 6 [0,100]
  * @param {string} reg 正则表达式
  */
 function paramCheck(k, param) {
-    const { rem, need, def } = param;
+    const rem = param.rem;
+    const need = param.need;
+    const def = param.def;
+    const lbl = param.lbl || rem;
     const enu = param.enum;
     const typ = param.type;
     let reg = param.reg;
     let len = param.len;
+    let range = param.range;
     if (need || def || len || reg || enu || typ) {
-        const name = k + (rem ? `(${rem})` : "");
-        if (len) len = Array.isArray(len) ? len : [len];
+        const name = k + (lbl ? `(${lbl})` : "");
+        if (len)
+            len = Array.isArray(len) ? len : [len];
+        if (range)
+            range = Array.isArray(range) ? range : [range];
         if (reg) {
             try {
                 reg = new RegExp(reg);
@@ -135,6 +129,14 @@ function paramCheck(k, param) {
                         return `${name}长度需小于${len[1]}`;
                     }
                 }
+                if (range && value != null) {
+                    if (value < range[0]) {
+                        return `${name}需大于${range[0]}`;
+                    }
+                    if (typeof range[1] === "number" && value > range[1]) {
+                        return `${name}需小于${range[1]}`;
+                    }
+                }
                 if (reg && !reg.test(value)) {
                     return `${name}不满足格式${reg}`;
                 }
@@ -152,6 +154,8 @@ function paramCheck(k, param) {
  * @param {string} msg 错误信息
  */
 function conditionCheck(condition, msg) {
+    condition = condition.replace(/{([USB])}/g, "$$$1");
+    msg = msg || "未命名错误";
     return function($B, $U, $S) {
         if (condition.indexOf("$U") >= 0 && typeof $U !== "object") {
             return 401;
@@ -173,6 +177,29 @@ function conditionCheck(condition, msg) {
     };
 }
 
+function conditionChecks(check) {
+    let checks = [];
+    if (check instanceof Array) {
+        for (let item of check) {
+            if (item && typeof item.R === "string") {
+                checks.push(conditionCheck(item.R, item.M));
+            } else if (typeof item === "string") {
+                checks.push(conditionCheck(item));
+            }
+        }
+    } else if (check && typeof check.R === "string") {
+        checks.push(conditionCheck(check.R, check.M));
+    } else if (typeof check === "string") {
+        checks.push(conditionCheck(check));
+    } else if (typeof check === "object") {
+        for (let k in check) {
+            let v = check[k];
+            checks.push(conditionCheck(k, v));
+        }
+    }
+    return checks;
+}
+
 /**
  * 生成 接口失败时返回数据的函数
  * @param {object} error 接口定义中的error
@@ -191,8 +218,11 @@ function makeSendErr(error) {
 function sendOk(data) {
     if (typeof data === "number")
         this.err(data);
-    else
+    else if (data && data.no) {
+        this.json(data);
+    } else {
         this.json({ no: 200, data });
+    }
 }
 
 function apiDefine(filename) {
@@ -214,7 +244,7 @@ function apiDefine(filename) {
     // 接口定义没问题
 
     // 构造参数检查函数
-    const checks = [];
+    let checks = [];
     if (data.params) {
         checks.push(paramClean(Object.keys(data.params)));
         for (let k in data.params) {
@@ -226,17 +256,11 @@ function apiDefine(filename) {
         }
     }
     if (data.check) {
-        for (let k in data.check) {
-            let v = data.check[k];
-            checks.push(conditionCheck(k, v));
-        }
+        checks = checks.concat(conditionChecks(data.check));
     }
-    const grants = [];
+    let grants = [];
     if (data.grant) {
-        for (let k in data.grant) {
-            let v = data.grant[k];
-            grants.push(conditionCheck(k, v));
-        }
+        grants = conditionChecks(data.grant);
     }
     const sendErr = makeSendErr(data.error);
     return { method, checks, grants, sendErr, ret: data.ret };
@@ -255,18 +279,20 @@ function routeApi(filename, handler) {
     // 构造接口实现函数
     let uri = filename.slice(apiDir.length, -5);
     if (!handler) {
-        logger.info(data.method.toUpperCase(), uri, "---> Mock数据");
+        logger.info("define", data.method.toUpperCase(), uri, "---> Mock数据");
         handler = function(req, res) {
+            console.log(data.ret);
             res.json(Mock.mock(data.ret));
         };
     } else {
-        logger.info(data.method.toUpperCase(), uri);
+        logger.info("define", data.method.toUpperCase(), uri);
     }
     // 开始路由
     router[data.method](uri, function(req, res) {
         res.err = data.sendErr;
         res.ok = sendOk;
         req.body = Object.assign({}, req.query, req.body);
+        req.session = req.session || {};
         // 参数检查
         for (let fn of data.checks) {
             let msg = fn(req.body, req.session.user, req.session);
@@ -286,10 +312,15 @@ function routeApi(filename, handler) {
                 return;
             }
         }
-        let ret = handler(req, res);
+        let ret;
+        if (handler.constructor.name === "GeneratorFunction") {
+            ret = co(handler(req, res));
+        } else {
+            ret = handler(req, res);
+        }
         if (!res.finished) {
             // 返回 promise 则 then
-            if (ret instanceof Promise) {
+            if (ret && typeof ret.then === "function") {
                 ret.then(function(data) {
                     res.ok(data);
                 }, function(err) {
