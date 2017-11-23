@@ -4,15 +4,11 @@
  * E-Mail: 929909260@qq.com
  */
 const appname = "automan";
-let port = 3000;
-let i = process.argv.indexOf("--port");
-if (i >= 0) {
-    port = process.argv[i + 1] || port;
-}
+
 module.exports = {
     appname,
     apiDir: "api",
-    port,
+    port: getPort(3000),
     mysql: {
         host: '127.0.0.1',
         user: 'root',
@@ -27,3 +23,11 @@ module.exports = {
         "403": "没有权限"
     }
 };
+
+function getPort(port) {
+    let index = process.argv.indexOf("--port");
+    if (index >= 0) {
+        port = process.argv[index + 1] || port;
+    }
+    return port;
+}

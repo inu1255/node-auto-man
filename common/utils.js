@@ -1,22 +1,23 @@
-/**
- * Created Date: 2017-09-27 14:21:55
- * Author: inu1255
- * E-Mail: 929909260@qq.com
- */
 const fs = require("fs");
 const logger = require("./log").logger;
-const readline = require('readline');
-const co = require("co");
+const net = require("net");
 
 exports.readJson = function(filePath) {
+    var s;
     try {
-        var s = fs.readFileSync(filePath, "utf8");
-        return JSON.parse(s);
+        s = fs.readFileSync(filePath, "utf8");
     } catch (e) {
         if (e.errno == -2) {
             logger.log(filePath, "不存在");
+        }else{
+            logger.log(filePath, e);
         }
-        logger.log(filePath, e);
+        return;
+    }
+    try {
+        return JSON.parse(s);
+    } catch (error) {
+        return eval("(" + s + ")");
     }
 };
 
@@ -28,31 +29,54 @@ exports.writeJson = function(filePath, data, space) {
     }
 };
 
-const question = function(rl, query) {
-    return new Promise(function(resolve, reject) {
-        rl.question(query, function(value) {
-            resolve(value);
-        });
-    });
+exports.cross = function(req, res, next) {
+    const origin = req.headers["origin"];
+    if (origin) {
+        res.setHeader("Access-Control-Allow-Origin", origin);
+        res.setHeader("Access-Control-Allow-Credentials", "true");
+        res.setHeader("Access-Control-Allow-Headers", "content-type");
+    }
+    next();
 };
 
-exports.readObj = function(tmpl) {
-    return co(function*() {
-        const rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout
-        });
-        const data = {};
-        for (let k in tmpl) {
-            let v = tmpl[k];
-            if (v) {
-                data[k] = yield question(rl, `${k}(${v}):`);
-                data[k] = data[k] || v;
-            } else {
-                data[k] = yield question(rl, `${k}:`);
+/**
+ * 检查端口是否占用
+ * @param {number} port 端口
+ */
+exports.probe = function(port) {
+    return new Promise(function(resolve, reject) {
+        var server = net.createServer().listen(port);
+
+        var calledOnce = false;
+
+        var timeoutRef = setTimeout(function() {
+            calledOnce = true;
+            resolve(true);
+        }, 2000);
+
+        server.on('listening', function() {
+            clearTimeout(timeoutRef);
+
+            if (server)
+                server.close();
+
+            if (!calledOnce) {
+                calledOnce = true;
+                resolve(false);
             }
-        }
-        rl.close();
-        return data;
+        });
+
+        server.on('error', function(err) {
+            clearTimeout(timeoutRef);
+
+            var result = false;
+            if (err.code === 'EADDRINUSE')
+                result = true;
+
+            if (!calledOnce) {
+                calledOnce = true;
+                resolve(result);
+            }
+        });
     });
 };

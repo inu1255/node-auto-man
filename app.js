@@ -8,12 +8,12 @@ const bodyParser = require('body-parser');
 const hot = require("node-hot-require");
 const router = hot.require("./router/index.js");
 const session = require("./common/session");
-const knex = require("./common/knex");
 const connectLogger = require("./common/log").connectLogger;
 const dev = require("./common/log").getLogger("dev");
 const app = express();
 const config = require("./common/config");
 const chokidar = require("chokidar");
+const utils = require("./common/utils");
 
 if (config.dev) {
     hot.watchAll();
@@ -33,17 +33,17 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use(connectLogger);
-app.use(knex.express);
-app.use(session);
+app.use("/api", session);
+app.use("/api", utils.cross);
 app.use("/api", router);
 
 app.get("/upgrade", function(req, res) {
     hot.reloadAll();
-    res.send(router.version);
+    res.send(router.version());
 });
 
 app.get('*', function(req, res) {
-    res.sendfile("./public/index.html");
+    res.sendFile("./public/index.html");
 });
 
 app.listen(config.port, function() {

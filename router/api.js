@@ -12,7 +12,6 @@ const path = require("path");
 const utils = require("../common/utils");
 const logger = require("../common/log").logger;
 const config = require("../common/config");
-const Mock = require("../common/mock");
 
 const apiDir = config.apiDir;
 
@@ -207,6 +206,7 @@ function conditionChecks(check) {
 function makeSendErr(error) {
     error = Object.assign({}, config.error, error);
     return function(no, msg) {
+        this._end = true;
         this.json({ no, msg: msg || error[no] || "未知错误" });
     };
 }
@@ -216,6 +216,7 @@ function makeSendErr(error) {
  * @param {object} data 
  */
 function sendOk(data) {
+    this._end = true;
     if (typeof data === "number")
         this.err(data);
     else if (data && data.no) {
@@ -282,7 +283,7 @@ function routeApi(filename, handler) {
         logger.info("define", data.method.toUpperCase(), uri, "---> Mock数据");
         handler = function(req, res) {
             console.log(data.ret);
-            res.json(Mock.mock(data.ret));
+            res.json(data.ret);
         };
     } else {
         logger.info("define", data.method.toUpperCase(), uri);
@@ -318,7 +319,7 @@ function routeApi(filename, handler) {
         } else {
             ret = handler(req, res);
         }
-        if (!res.finished) {
+        if (!res.finished&&!res._end) {
             // 返回 promise 则 then
             if (ret && typeof ret.then === "function") {
                 ret.then(function(data) {
