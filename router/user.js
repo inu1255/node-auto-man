@@ -139,6 +139,7 @@ exports.register = function(req, res) {
             ]);
             user.id = pack.insertId;
         } else {
+            body.invite = 0;
             let pack = yield db.execSQL([
                 db.update("verify", { rest: -1 }).where("title", title),
                 db.insert("user", body)
