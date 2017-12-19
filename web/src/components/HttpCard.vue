@@ -35,9 +35,9 @@ export default {
               this.info.req_header = JSON.parse(this.info.req_header)
           }
           let body = window.atob(this.info.req_body)
-          if (/gzip/.test(this.info.req_header["accept-encoding"])) {
-              body = pako.inflate(body)
-          }
+        //   if (/gzip/.test(this.info.req_header["accept-encoding"])) {
+        //       body = pako.inflate(body)
+        //   }
           return body
       },
       res_body(){
@@ -46,9 +46,9 @@ export default {
               this.info.res_header = JSON.parse(this.info.res_header)
           }
           let body = window.atob(this.info.res_body)
-          if (this.info.res_header["content-encoding"]=="gzip") {
-              body = new TextDecoder("utf-8").decode(pako.inflate(body));
-          }
+        //   if (this.info.res_header["content-encoding"]=="gzip") {
+        //       body = new TextDecoder("utf-8").decode(pako.inflate(body));
+        //   }
           return body
       }
   }

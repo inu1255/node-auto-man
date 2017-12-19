@@ -59,14 +59,16 @@ export default {
       this.user.port = 0;
     },
     async selectNode(a, b, c) {
+      if (!a.id) return
       if (!a.data) {
         a.data = await request("/service/history?id=" + a.id);
       }
+      console.log(a.data)
       this.info = a.data;
     },
     async add() {
       let ids = this.$refs.tree.getCheckedKeys();
-      if (!ids||ids.length) {
+      if (!ids||!ids.length) {
         this.$message.error("请勾选任务")
         return;
       }
