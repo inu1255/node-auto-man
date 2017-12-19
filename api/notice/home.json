@@ -1,0 +1,15 @@
+{
+    "name": "首页公告",
+    "method": "GET",
+    "params": {
+    },
+    "grant":{
+    },
+    "error": {
+    },
+    "ret": {
+        "no": 200,
+        "msg": "",
+        "data": "# hello"
+    }
+}

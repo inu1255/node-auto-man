@@ -15,12 +15,12 @@ const config = require("./config");
 
 const transporter = nodemailer.createTransport({
     pool: true,
-    host: 'smtp.aliyun.com',
+    host: 'smtp.qq.com',
     port: 25,
     secure: false,
     auth: {
-        user: 'uniwise@aliyun.com',
-        pass: 'uniwise87'
+        user: 'admin@inu1255.cn',
+        pass: 'juqztcirowggcaaf'
     }
 });
 
