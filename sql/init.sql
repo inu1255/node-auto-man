@@ -42,10 +42,10 @@ create table if not exists history (
   id int unsigned auto_increment primary key,
   method varchar(32) default "",
   url varchar(1024) default "",
-  req_header json,
+  req_header text,
   req_body longtext,
   code int unsigned,
-  res_header json,
+  res_header text,
   res_body longtext,
   port int unsigned not null,
   create_at timestamp default current_timestamp
