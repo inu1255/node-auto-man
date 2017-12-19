@@ -12,6 +12,7 @@ create table if not exists user (
   money int default 100,
   used_money int default 0,
   port int default 0,
+  invite int default 0,
   create_at timestamp default current_timestamp,
   unique key user_account_unique (account),
   unique key user_email_unique (email),
