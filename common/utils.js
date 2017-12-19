@@ -1,6 +1,7 @@
 const fs = require("fs");
 const logger = require("./log").logger;
 const net = require("net");
+const Duplex = require('stream').Duplex;
 
 exports.readJson = function(filePath) {
     var s;
@@ -9,16 +10,12 @@ exports.readJson = function(filePath) {
     } catch (e) {
         if (e.errno == -2) {
             logger.log(filePath, "不存在");
-        }else{
+        } else {
             logger.log(filePath, e);
         }
         return;
     }
-    try {
-        return JSON.parse(s);
-    } catch (error) {
-        return eval("(" + s + ")");
-    }
+    return new Function("return " + s)();
 };
 
 exports.writeJson = function(filePath, data, space) {
@@ -27,6 +24,32 @@ exports.writeJson = function(filePath, data, space) {
     } catch (e) {
         logger.log(filePath, e);
     }
+};
+
+exports.readJsonAsync = function(filePath) {
+    return new Promise(function(resolve, reject) {
+        fs.readFile(filePath, "utf8", function(e, s) {
+            if (e) {
+                if (e.errno == -2) {
+                    logger.log(filePath, "不存在");
+                } else {
+                    logger.log(filePath, e);
+                }
+                reject(e);
+            } else resolve(new Function("return " + s)());
+        });
+    });
+};
+
+exports.writeJsonAsync = function(filePath, data, space) {
+    return new Promise(function(resolve, reject) {
+        fs.writeFile(filePath, JSON.stringify(data, null, space), "utf8", function(err, data) {
+            if (err) {
+                logger.log(filePath, e);
+                reject(err);
+            } else resolve(data);
+        });
+    });
 };
 
 exports.cross = function(req, res, next) {
@@ -79,4 +102,20 @@ exports.probe = function(port) {
             }
         });
     });
+};
+
+exports.streamToBuffer = function(stream) {
+    return new Promise((resolve, reject) => {
+        let buffers = [];
+        stream.on('error', reject);
+        stream.on('data', (data) => buffers.push(data));
+        stream.on('end', () => resolve(Buffer.concat(buffers)));
+    });
+};
+
+exports.bufferToStream = function(buffer) {
+    let stream = new Duplex();
+    stream.push(buffer);
+    stream.push(null);
+    return stream;
 };

@@ -3,7 +3,7 @@
  * Author: inu1255
  * E-Mail: 929909260@qq.com
  */
-const appname = "automan";
+const appname = "云签签";
 
 module.exports = {
     appname,
@@ -11,9 +11,13 @@ module.exports = {
     port: getPort(3000),
     mysql: {
         host: '127.0.0.1',
+        port: 3306,
         user: 'root',
         password: '199337',
-        database: appname
+        database: appname,		 
+        connectionLimit: 50,		 
+        supportBigNumbers: true,		 
+        bigNumberStrings: false
     },
     dev: process.argv.indexOf("--dev") >= 0,
     error: {

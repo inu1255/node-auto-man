@@ -1,0 +1,22 @@
+{
+    "name": "获取记录",
+    "method": "GET",
+    "params": {
+        "id":{
+            "rem": "id",
+            "need": true
+        }
+    },
+    "grant": {
+        "$U": "需要登录"
+    },
+    "error": {
+        "404": "记录不存在"
+    },
+    "ret": {
+        "no": 200,
+        "msg": "",
+        "data": {
+        }
+    }
+}

@@ -1,30 +1,27 @@
-#  使用node-gyp为nodejs编译c/c++扩展
+# ss-box
 
-## windows编译环境搭建
+> ss manage system
 
-### 1. 安装依赖
-- .net4.5及以上版本(win7 sp1 及以上版本)
+## Build Setup
 
-使用管理员权限打开cmd/PowerShell
 ``` bash
-# 安装 cnpm, 国内最快的npm包管理软件
-npm install -g cnpm
-cnpm install -g node-gyp
-# 安装依赖软件(python,visual-studio-build-tools 14.0)
-cnpm install --global --production windows-build-tools
-# 安装完成后将 %用户目录%.windows-build-tools\python27 加入PATH环境变量
+# install dependencies
+npm install
+
+# serve with hot reload at localhost:8080
+npm run dev
+
+# build for production with minification
+npm run build
+
+# build for production and view the bundle analyzer report
+npm run build --report
+
+# run unit tests
+npm run unit
+
+# run all tests
+npm test
 ```
 
-### 2. 开始编译
-
-下载源代码
-
-链接: [https://pan.baidu.com/s/1miOMmAc](https://pan.baidu.com/s/1miOMmAc) 密码: 9dem
-
-在源代码根目录打开cmd/PowerShell
-``` bash
-cnpm install
-node-gyp configure
-node-gyp build
-```
-
+For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).

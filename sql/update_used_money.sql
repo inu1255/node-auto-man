@@ -1,0 +1,1 @@
+update user set used_money = (select sum(run_num) from task where uid=user.id);

@@ -6,6 +6,12 @@
 const express = require("express");
 const bodyParser = require('body-parser');
 const hot = require("node-hot-require");
+hot.filter = function(filename) {
+    if (filename.endsWith("common/storage.js")) {
+        return false;
+    }
+    return true;
+};
 const router = hot.require("./router/index.js");
 const session = require("./common/session");
 const connectLogger = require("./common/log").connectLogger;

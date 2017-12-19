@@ -4,6 +4,9 @@
     "semi": true,
     "e4x": true,
     "preset": "jquery",
+    "indent":{
+        "TopLevelFunctionBlock": 1
+    },
     "whiteSpace": {
         "before": {
             "ArgumentList": 0,

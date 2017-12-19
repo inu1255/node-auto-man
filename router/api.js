@@ -95,7 +95,14 @@ function paramCheck(k, param) {
                             body[k] = parseInt(value);
                             break;
                         case "array":
-                            if (value instanceof Array)
+                            if (typeof value !== "object") {
+                                try {
+                                    value = body[k] = JSON.parse(value);
+                                } catch (error) {
+                                    return `${name}类型必须是array`;
+                                }
+                            }
+                            if (!(value instanceof Array))
                                 return `${name}必须是数组`;
                             break;
                         case "str":
@@ -106,7 +113,7 @@ function paramCheck(k, param) {
                         case "json":
                             if (typeof value !== "object") {
                                 try {
-                                    body[k] = JSON.parse(value);
+                                    value = body[k] = JSON.parse(value);
                                 } catch (error) {
                                     return `${name}类型必须是json`;
                                 }
@@ -319,7 +326,7 @@ function routeApi(filename, handler) {
         } else {
             ret = handler(req, res);
         }
-        if (!res.finished&&!res._end) {
+        if (!res.finished && !res._end) {
             // 返回 promise 则 then
             if (ret && typeof ret.then === "function") {
                 ret.then(function(data) {
@@ -364,9 +371,7 @@ function getHander(filename) {
         if (mod && typeof mod[key] === "function")
             handler = mod[key];
     } catch (error) {
-        if (error.code != "MODULE_NOT_FOUND") {
-            logger.error(error);
-        }
+        logger.error(error);
     }
     return handler;
 }

@@ -1,0 +1,34 @@
+{
+    "name": "添加任务",
+    "method": "POST",
+    "params": {
+        "ids": {
+            "rem": "记录id",
+            "need": true,
+            "type": "array"
+        },
+        "title": {
+            "rem": "任务名",
+            "need": true
+        }
+    },
+    "grant": {
+        "$U": "需要登录"
+    },
+    "check": {
+        "$B.ids.length": "记录id不能为空"
+    },
+    "error": {
+    },
+    "ret": {
+        "no": 200,
+        "msg": "",
+        "data": {
+            "id|+1": 1,
+            "name": "@cfirst服务",
+            "desc": "@cparagraph",
+            "url": "@url",
+            "method": "POST"
+        }
+    }
+}

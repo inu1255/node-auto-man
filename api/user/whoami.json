@@ -1,6 +1,12 @@
 {
     "name": "登录",
     "method": "GET",
+    "params": {
+        "force":{
+            "rem": "强制刷新",
+            "type": "int"
+        }
+    },
     "grant": {
         "$U": "需要登录"
     },

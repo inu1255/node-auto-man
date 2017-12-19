@@ -4,281 +4,146 @@
  * E-Mail: 929909260@qq.com
  */
 const co = require("co");
-const knex = require("../common/knex").db;
-const email = require("../common/email");
+const db = require("../common/db");
 const config = require("../common/config");
 const logger = require("../common/log").logger;
+const utils = require("../common/utils");
+const MitmStorage = require("../lib/mitm").MitmStorage;
+const fs = require("fs");
+const promisify = require("../common/promisify");
+const statAsync = promisify(fs.stat);
 const fetch = require("node-fetch");
 
-function getService(sid) {
-    return co(function*() {
-        const serv = yield knex("service").where("id", sid).first();
-        if (!serv) return serv;
-        serv.params = JSON.parse(serv.params);
-        serv.checks = JSON.parse(serv.checks);
-        return serv;
-    });
-}
+let storage = new MitmStorage("mitm");
+storage.run(cron);
 
-function parseParam(s, params, param) {
-    for (let k in params) {
-        let v = param[k];
-        s = s.replace(k, v);
-    }
-    return s;
-}
-
-function signin(param) {
-    const sid = param.sid;
+function cron() {
     return co(function*() {
-        const serv = yield getService(sid);
-        if (!serv) return { code: 404, msg: `服务${sid}不存在` };
-        const opt = {};
-        for (let k in serv.params) {
-            if (param.values[k] == null) {
-                return { code: 400, msg: `缺少参数${k}(${serv.params[k]})` };
-            }
+        let now = new Date();
+        if (now.getHours() < 8) {
+            cron.timer = setTimeout(cron, 3600000);
+            return;
         }
-        opt.body = parseParam(serv.body, serv.params, param.values);
-        opt.headers = parseParam(serv.headers, serv.params, param.values);
-        opt.headers = JSON.parse(opt.headers);
-        opt.method = serv.method;
-        const url = parseParam(serv.url, serv.params, param.values);
-        const res = yield fetch(url, opt);
-        const text = yield res.text();
-        for (let k in serv.checks) {
-            let msg = serv.checks[k];
-            if (new RegExp(k).test(text)) {
-                if (msg.startsWith("error:")) {
-                    return { code: 1, text, msg: msg.slice(6) };
-                }
-                if (msg.startsWith("retry:")) {
-                    return { code: 2, text, msg: msg.slice(6) };
-                }
-                return { code: 0, text, msg };
+        let yestoday = Math.floor(now.getTime() / 1000) - 80000;
+        let t = yield db.SingleSQL("select title,uid from task where enable=1 and lastrun_at<? and uid in (select id from user where money>used_money) order by lastrun_at", [yestoday]).first();
+        if (t) {
+            let rows = yield db.select("task").where(t);
+            try {
+                yield Promise.all(rows.map(row => {
+                    let body = row.req_body ? new Buffer(row.req_body, 'base64') : undefined;
+                    return fetch(row.url, { method: row.method, headers: JSON.parse(row.req_header), body });
+                }));
+                yield db.update("task", { "lastrun_at": yestoday + 80000, "run_num": db.Raw("run_num+1") }).where(t).where("lastrun_at", "<", yestoday);
+                yield db.update("user", { used_money: db.Raw(`used_money+${rows.length}`) }).where("id", t.uid);
+            } catch (error) {
+                console.log(error);
             }
-        }
-        return { code: 1, text, msg: "失败" };
-    });
-}
-
-function run(param) {
-    return co(function*() {
-        param.values = JSON.parse(param.values);
-        let res = yield signin(param);
-        let record = {
-            sid: param.sid,
-            uid: param.uid,
-            params: JSON.stringify(param.values),
-            body: res.text,
-            code: res.code,
-            msg: res.msg
-        };
-        let ids = yield knex("record").insert(record, "id");
-        record.id = ids[0];
-        record.create_at = new Date();
-        if (res.code === 2) {
-            yield knex("params").where("sid", param.sid).where("uid", param.uid).update({ rid: ids[0] });
+            cron.timer = setTimeout(cron, 1000);
         } else {
-            yield knex("params").where("sid", param.sid).where("uid", param.uid).update({ rid: ids[0], lastrun_at: today() });
-        }
-        return record;
-    });
-}
-
-function today() {
-    return Math.floor(new Date().getTime() / 86400000);
-}
-
-function worker() {
-    return co(function*() {
-        let rows = yield knex("params").where("active", ">", 0).where("lastrun_at", "<", today()).limit(30);
-        for (let param of rows) {
-            yield run(param);
-        }
-        return rows.length;
-    });
-}
-
-function loop() {
-    worker();
-    setTimeout(loop, 300000);
-}
-
-loop();
-
-if (require.main == module) {
-    co(function*() {
-        try {
-            const data = yield worker();
-            console.log(data);
-        } catch (error) {
-            console.log(error);
+            cron.timer = setTimeout(cron, 60000);
         }
     });
 }
 
-exports.test = function(req, res) {
+exports.start = function(req, res) {
     return co(function*() {
-        const serv = req.body;
-        const param = serv;
-        const opt = {};
-        for (let k in serv.params) {
-            if (param.values[k] == null) {
-                return { code: 400, msg: `缺少参数${k}(${serv.params[k]})` };
-            }
-        }
-        opt.body = parseParam(serv.body||"", serv.params, param.values);
-        opt.headers = parseParam(serv.headers, serv.params, param.values);
-        opt.headers = JSON.parse(opt.headers);
-        opt.method = serv.method;
-        const url = parseParam(serv.url, serv.params, param.values);
-        const res = yield fetch(url, opt);
-        const text = yield res.text();
-        for (let k in serv.checks) {
-            let msg = serv.checks[k];
-            if (new RegExp(k).test(text)) {
-                if (msg.startsWith("error:")) {
-                    return { code: 1, text, msg: msg.slice(6) };
-                }
-                if (msg.startsWith("retry:")) {
-                    return { code: 2, text, msg: msg.slice(6) };
-                }
-                return { code: 0, text, msg };
-            }
-        }
-        return { code: 1, text, msg: "失败" };
+        let user = req.session.user;
+        let port = user.id + 1024;
+        yield storage.start(port);
+        return { port };
     });
 };
 
-exports.create = function(req, res) {
+exports.stop = function(req, res) {
     return co(function*() {
-        const body = req.body;
-        const user = req.session.user;
-        body.create_by = user.id;
-        try {
-            const ids = yield knex("service").insert(body, "id");
-            body.id = ids[0];
-            return body;
-        } catch (error) {
-            if (error.code === "ER_DUP_ENTRY") {
-                return 405;
-            }
-            throw error;
-        }
+        let user = req.session.user;
+        let port = user.id + 1024;
+        yield storage.stop(port);
     });
 };
 
-exports.update = function(req, res) {
+exports.history = function(req, res) {
     return co(function*() {
-        const body = req.body;
-        const user = req.session.user;
-        const serv = yield knex("service").where("id", body.id).first();
-        if (!serv) {
-            return 404;
-        }
-        if (serv.create_by != user.id && user.id != 2) {
-            return 405;
-        }
-        yield knex("service").where("id", body.id).update(body);
+        let user = req.session.user;
+        let port = user.id + 1024;
+        let body = req.body;
+        return yield db.select("history").where("port", port).where("id", body.id).first();
     });
 };
 
-exports.info = function(req, res) {
+exports.historyTree = function(req, res) {
     return co(function*() {
-        const body = req.body;
-        const user = req.session.user;
-        const serv = yield knex("service").where("id", body.id).first();
-        if (!serv) {
-            return 404;
+        let user = req.session.user;
+        let port = user.id + 1024;
+        let body = req.body;
+        let data = yield db.select("history", ["id", "url"]).where("port", port).where("id", body.id);
+        let hostMap = {};
+        for (let item of data) {
+            let ss = item.url.split("/");
+            let host = ss.slice(0, 3).join("/");
+            let path = ss.slice(3).join("/");
+            let m = hostMap[host] = hostMap[host] || {
+                label: host,
+                children: []
+            };
+            m.children.push({
+                label: path,
+                id: item.id
+            });
         }
-        if (serv.create_by != user.id && user.id != 2) {
-            return 405;
-        }
-        serv.params = JSON.parse(serv.params);
-        serv.headers = JSON.parse(serv.headers);
-        serv.checks = JSON.parse(serv.checks);
-        return serv;
+        return Object.values(hostMap);
     });
 };
 
-exports.params = function(req, res) {
+exports.clear = function(req, res) {
     return co(function*() {
-        const body = req.body;
-        const user = req.session.user;
-        body.uid = user.id;
-        try {
-            yield knex("params").insert(body);
-            return body;
-        } catch (error) {
-            if (error.code === "ER_DUP_ENTRY") {
-                let sid = body.sid;
-                delete body.sid;
-                yield knex("params").where({ sid, uid: user.id }).update(body);
-                return;
-            }
-            throw error;
-        }
-    });
-};
-
-exports.run = function(req, res) {
-    return co(function*() {
-        const body = req.body;
-        const user = req.session.user;
-        let { sid } = body;
-        let count = yield knex("record").where({ sid, uid: user.id }).whereRaw("FLOOR((UNIX_TIMESTAMP(create_at)+28800)/86400)=" + today()).count();
-        count = count[0]["count(*)"];
-        if (count > 10) {
-            return 405;
-        }
-        let param = yield knex("params").where({ sid, uid: user.id }).first();
-        if (!param) {
-            return 404;
-        }
-        let record = yield run(param);
-        return record;
-    });
-};
-
-exports.list = function(req, res) {
-    return co(function*() {
-        const body = req.body;
-        const user = req.session.user;
-        const { keyword, page, size } = body;
-        let sql = knex("service").select(["id", "title", "desc", "params", "create_at", "create_by"]);
-        if (keyword) sql.where("service.title", "like", `%${keyword}%`).orWhere("service.desc", "like", `%${keyword}%`);
-        if (user) sql.select("params.*").leftJoin(knex("params").where("params.uid", user.id).as("params"), "service.id", "params.sid");
-        let rows = yield sql.offset(page * size).limit(size);
-        return rows;
-    });
-};
-
-exports.mine = function(req, res) {
-    return co(function*() {
-        const body = req.body;
-        const user = req.session.user;
-        const { keyword, active, page, size } = body;
-        let sql = knex(knex("params").where("params.uid", user.id).as("params"));
-        sql.select(["service.id", "service.title", "service.desc", "service.params", "service.create_at",
-            "params.active", "params.rid", "params.values",
-            "record.params as param", "record.body", "record.code", "record.msg", "record.create_at",
+        let user = req.session.user;
+        let port = user.id + 1024;
+        yield db.execSQL([
+            { sql: `insert into history_backup select * from history where port=?`, args: [port] },
+            db.delete("history").where("port", port),
         ]);
-        sql.leftJoin("service", "service.id", "params.sid").leftJoin("record", "record.id", "params.rid");
-        if (keyword) sql.where("service.title", "like", `%${keyword}%`).orWhere("service.desc", "like", `%${keyword}%`);
-        sql.where("params.active", active ? ">" : "<=", 0);
-        let rows = yield sql.offset(page * size).limit(size);
-        return rows;
     });
 };
 
-exports.records = function(req, res) {
+exports.addTask = function(req, res) {
     return co(function*() {
-        const body = req.body;
-        const user = req.session.user;
-        const { sid, page, size } = body;
-        let sql = knex("record").where("uid", user.id).where("sid", sid).orderBy("id", "desc");
-        let rows = yield sql.offset(page * size).limit(size);
-        return rows;
+        let user = req.session.user;
+        let port = user.id + 1024;
+        let body = req.body;
+        let rows = yield db.select("history").where("id", "in", body.ids).where("port", port);
+        let tasks = rows.map(x => {
+            return {
+                method: x.method,
+                url: x.url,
+                req_header: x.req_header,
+                req_body: x.req_body,
+                code: x.code,
+                res_header: x.res_header,
+                res_body: x.res_body,
+                uid: user.id,
+                title: body.title,
+            };
+        });
+        yield db.execSQL([
+            { sql: `insert into history_backup select * from history where port=?`, args: [port] },
+            db.delete("history").where("port", port),
+            db.insert("task", tasks),
+        ]);
+    });
+};
+
+exports.listTask = function(req, res) {
+    return co(function*() {
+        let user = req.session.user;
+        return yield db.SingleSQL("select title,count(title) count,lastrun_at,sum(run_num) money from task where enable=1 and uid=? group by title", [user.id]);
+    });
+};
+
+exports.delTask = function(req, res) {
+    return co(function*() {
+        let user = req.session.user;
+        let body = req.body;
+        return yield db.update("task", { enable: 0 }).where("title", body.title).where("uid", user.id);
     });
 };

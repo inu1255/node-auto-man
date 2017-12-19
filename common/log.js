@@ -15,16 +15,22 @@ const config = require("./config");
 log4js.configure({
     appenders: {
         app: {
-            type: 'file',
+            type: 'dateFile',
+            daysToKeep: 15,
+            keepFileExt: true,
             filename: `./log/${config.appname}.log`
         },
         console: { type: 'stdout' },
         access: {
-            type: 'file',
+            type: 'dateFile',
+            daysToKeep: 15,
+            keepFileExt: true,
             filename: `./log/access.log`
         },
         db: {
-            type: 'file',
+            type: 'dateFile',
+            daysToKeep: 15,
+            keepFileExt: true,
             filename: `./log/db.log`
         }
     },
@@ -38,7 +44,7 @@ log4js.configure({
             level: 'info'
         },
         db: {
-            appenders: ["db"],
+            appenders: ["db", "console"],
             level: 'debug'
         },
         access: {
