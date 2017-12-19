@@ -15,9 +15,7 @@ const config = require("./config");
 
 const transporter = nodemailer.createTransport({
     pool: true,
-    host: 'smtp.qq.com',
-    port: 25,
-    secure: false,
+    service: "qq",
     auth: {
         user: 'admin@inu1255.cn',
         pass: 'juqztcirowggcaaf'
@@ -34,7 +32,7 @@ transporter.verify(function(error, success) {
 
 exports.sendCode = function(to, code) {
     const message = {
-        from: `${config.title}<uniwise@aliyun.com>`,
+        from: `${config.title}<admin@inu1255.cn>`,
         to,
         subject: config.title + '验证码',
         html: `<p>您的验证码是[${code}]</p><p>your verification code is [${code}]</p>`
@@ -52,7 +50,7 @@ exports.sendCode = function(to, code) {
 
 exports.sendHtml = function(to, title, html) {
     const message = {
-        from: `${config.title}<uniwise@aliyun.com>`,
+        from: `${config.title}<admin@inu1255.cn>`,
         to,
         subject: title,
         html
