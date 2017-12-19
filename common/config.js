@@ -3,10 +3,11 @@
  * Author: inu1255
  * E-Mail: 929909260@qq.com
  */
-const appname = "云签签";
+const appname = "automan";
 
 module.exports = {
     appname,
+    title: "云签签",
     apiDir: "api",
     port: getPort(3000),
     mysql: {

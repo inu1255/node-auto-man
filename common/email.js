@@ -34,9 +34,9 @@ transporter.verify(function(error, success) {
 
 exports.sendCode = function(to, code) {
     const message = {
-        from: `${config.appname}<uniwise@aliyun.com>`,
+        from: `${config.title}<uniwise@aliyun.com>`,
         to,
-        subject: config.appname + '验证码',
+        subject: config.title + '验证码',
         html: `<p>您的验证码是[${code}]</p><p>your verification code is [${code}]</p>`
     };
     return new Promise(function(resolve, reject) {
@@ -52,7 +52,7 @@ exports.sendCode = function(to, code) {
 
 exports.sendHtml = function(to, title, html) {
     const message = {
-        from: `${config.appname}<uniwise@aliyun.com>`,
+        from: `${config.title}<uniwise@aliyun.com>`,
         to,
         subject: title,
         html
