@@ -49,6 +49,9 @@ exports.start = function(req, res) {
     return co(function*() {
         let user = req.session.user;
         let port = user.id + 1024;
+        if (yield utils.probe(port)) {
+            return 404;
+        }
         yield storage.start(port);
         return { port };
     });
